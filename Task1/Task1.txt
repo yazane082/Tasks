@@ -1,0 +1,207 @@
+part1
+
+pvcreate /dev/sdc #creating the bool
+
+vgcreate -s 16M vg02 /dev/sdc #creating volume group with 16M as size
+
+lvcreate -l 50 -n lvm01 vg02 #creating logical volume on vg02 with name lvm01
+
+mkfs.ext4 /dev/vg02/lvm01 #formating the logical volume as ext4
+
+blkid /dev/vg02/lvm01 #getting the uuid of my logical volume
+
+vim /etc/fstab #editing the file that has the volume data to be mounted on startup
+
+UUID=e524f954-d1b0-49ea-bbb2-497e196e0635 /mnt/data ext4 defaults 0 0 #adding this line to the fstab
+
+mkdir /mnt/data #making my mount point directory
+
+
+
+part2
+
+1
+
+useradd -u 601 user1 #adding the user
+
+passwd user1=>redhat
+
+sudo vi /etc/ssh/sshd_config #editing the ssh configuration
+
+DenyUsers user1 #deny the user from ssh access
+
+systemctl restart sshd #restarting the service to apply the changes
+
+2
+
+usermod -G TrainingGroup user1 #adding user1 to the group
+
+3
+
+useradd user2
+
+useradd user3
+
+passwd user2=>redhat
+
+passwd user3=>redhat
+
+groupadd admingroup
+
+usermod -G admingroup user3
+
+usermod -G admingroup user2
+
+vi /etc/passwd #change the uid and gid of user3 to 0 same as root
+
+
+part3
+
+ssh-keygen -o -b 4096 #to generate the the key
+
+ssh-copy-id remote_username@server_ip_address #to send the figerprint to server
+
+part4
+
+cp /etc/fstab /var/tmp/admin
+
+setfacl -m u:user1:rw admin
+
+setfacl -m u:user2:--- admin
+
+part5
+
+vi /etc/selinux/config #open the configuration file to edit
+
+SELINUX=enforcing # change selinux value to enforcing
+
+part6
+
+vi task.sh => sleep 10m #make job file that will run for 10 minutes
+
+chmod +x task.sh #make the file executable
+
+./task.sh #run the job than ctr+z to stop it
+
+bg #to start the stoped task at background
+
+jobs #to get job number
+
+kill %1 #to kill the job with the number 1
+
+part7
+
+1
+
+yum install tmux
+
+2
+
+yum install mysql
+
+3
+
+sudo mkdir /var/www/html/repos/ #making the directory that save my repo
+
+createrepo /var/www/html #create my repo
+
+sudo vi /etc/yum.repos.d/remote.repo => [remote]    #add my repo config to repos
+
+					name=RHEL Apache
+
+					baseurl=http://172.20.51.102
+
+					enabled=1
+
+					gpgcheck=0
+
+4
+
+yum install zabbix-agent --disablerepo="*" --enablerepo="remote"  #to install just from my local repo
+
+5
+
+
+
+yum install zabbix-agent
+
+yum install zabbix-server
+
+yum install php
+
+yum install zabbix-web
+
+yum install --downloadonly --downloaddir=/var/www/html/repos fping # this how i downloaded the dependancies without installing it then i installed using local repo
+
+part8
+
+1
+
+firewall-cmd --zone=public --add-port=443/tcp #open port 443 on tcp
+
+firewall-cmd --zone=public --add-port=80/tcp #open port 80 on tcp
+
+2
+
+sudo firewall-cmd --runtime-to-permanent #making the changes permanent
+
+3
+
+firewall-cmd --add-rich-rule='rule family=ipv4 source address=172.20.51.172 service name=ssh reject' #making rich rule to reject ip at specific port
+
+part9
+
+vi /root/script.sh=>    date | tr -d '\n'>> /tmp/mydata        # adding date and delete the new line
+			echo ' - ' | tr -d '\n' >> /tmp/mydata # adding the space between time stapm and the users
+			users >> /tmp/mydata                   # adding the users
+
+
+
+crontab -e # to open crontab file
+
+30 1 * * * /root/script.sh # run the script per day at 1:30am
+
+
+part10
+
+1
+
+yum install --downloadonly --downloaddir=/var/www/html/repos mariadb
+
+yum install --disablerepo="*" --enablerepo="remote" mariadb
+
+2
+
+firewall-cmd --add-port=3306/tcp  #opening the database port
+
+3
+
+mysql #entering the shell
+
+CREATE DATABASE rhce1; # making my database
+
+CREATE USER 'user1'@localhost IDENTIFIED BY 'password1'; #creating the user
+
+GRANT ALL PRIVILEGES ON rhce1.* to user1@localhost; #giving the user permissions to the database
+
+FLUSH PRIVILEGES; 
+
+4
+
+mysql
+
+system mysql -u user1 -p; #entering as user1
+
+connect rhce1; #connecting to my database
+
+CREATE TABLE studentdb (studentfirstname VARCHAR(20) , studentlastname VARCHAR(20) , program VARCHAR(20) , gyear INT(4) , number CHAR(7) PRIMARY KEY); #creating the table
+
+INSERT INTO studentdb VALUES ('Allen','Brown','mechanical',2017,'110-001'); #inserting some data
+
+INSERT INTO studentdb VALUES ('Allen','David','electrical',2018,'110-002');
+
+INSERT INTO studentdb VALUES ('Mary','Green','computer science',2020,'110-003');
+
+
+
+
